@@ -213,9 +213,7 @@
             <div class="p-6 space-y-4">
                 <h3 class="text-xl font-bold text-slate-800 border-b pb-2">💡 사용 안내</h3>
                 <ul class="list-disc list-inside space-y-3 text-sm text-slate-700 leading-relaxed">
-                    <li><strong>자동 로딩:</strong> 프로그램 실행 시 동일 폴더에 있는 <code class="bg-slate-100 px-1 rounded">KOR.db</code> 파일을 자동으로 불러옵니다.</li>
                     <li><strong>말씀 띄우기:</strong> '말씀 창 열기'를 눌러 새 창을 띄운 후 프로젝터(보조 모니터) 화면으로 옮겨주세요.</li>
-                    <li><strong>아이콘 로고:</strong> 처음 열린 말씀 창의 정중앙에는 동일 폴더에 있는 <code class="bg-slate-100 px-1 rounded">icon.ico</code> 파일이 로고로 표시됩니다.</li>
                     <li><strong>단어 검색:</strong> 검색 결과에서 체크박스를 선택 후 '체크한 말씀 띄우기'를 통해 여러 구절을 한 번에 띄울 수 있습니다.</li>
                     <li><strong>자유 텍스트:</strong> 설교 대지나 찬송가 제목 등 임의의 문구를 화면 정중앙에 크게 띄울 수 있습니다.</li>
                     <li><strong>단어 강조:</strong> 핵심 메시지가 되는 특정 단어(띄어쓰기 포함 정확히 일치)를 원하는 색상과 스타일(굵게, 밑줄 등)로 강조할 수 있습니다.</li>
@@ -421,7 +419,15 @@
             const left = (screen.width/2)-(width/2) + screen.width;
             const top = (screen.height/2)-(height/2);
             
-            const iconUrl = new URL('icon.ico', window.location.href).href;
+            let iconUrl = 'icon.ico';
+            try {
+                // blob: 또는 data: 환경(Canvas 등)에서는 절대 경로 생성 시 오류가 발생할 수 있으므로 예외 처리
+                if (!window.location.href.startsWith('blob:') && !window.location.href.startsWith('data:')) {
+                    iconUrl = new URL('icon.ico', window.location.href).href;
+                }
+            } catch (e) {
+                console.warn('아이콘 URL 생성 오류:', e);
+            }
 
             displayWindow = window.open('', 'BibleDisplayWindow', `width=${width},height=${height},top=${top},left=${left}`);
             if (displayWindow) {
