@@ -109,6 +109,17 @@
                     </div>
                 </div>
 
+                <!-- 자유 텍스트 띄우기 추가 -->
+                <div>
+                    <label for="custom-text-input" class="block text-sm font-medium text-slate-600">자유 텍스트 띄우기 (설교 대지, 찬송가 제목 등)</label>
+                    <div class="mt-1 flex rounded-xl shadow-sm">
+                        <textarea id="custom-text-input" rows="2" class="flex-1 block w-full rounded-none rounded-l-xl border-slate-300 focus:border-rose-500 focus:ring-rose-500 sm:text-sm p-3 bg-white resize-none" placeholder="예: 첫째, 믿음으로 의롭게 됩니다. (Shift + Enter 로 줄바꿈)"></textarea>
+                        <button id="custom-text-btn" class="inline-flex items-center justify-center rounded-r-xl border border-l-0 border-rose-500 bg-rose-500 px-5 py-2 text-sm font-bold text-white hover:bg-rose-600 transition-colors w-20">
+                            띄우기
+                        </button>
+                    </div>
+                </div>
+
                 <div id="result-display" class="bg-sky-50/80 p-4 rounded-xl border border-sky-200 text-left shadow-inner">
                     <p class="text-slate-500 text-center">이곳에 검색 결과가 표시됩니다.</p>
                 </div>
@@ -125,7 +136,7 @@
                     <h3 class="text-lg font-semibold text-slate-700 mb-3">단어 강조 효과</h3>
                     <div class="space-y-4 bg-white p-4 rounded-xl border border-slate-100">
                         <div>
-                            <label for="highlight-input" class="text-sm font-medium text-slate-600">강조할 단어 (띄어쓰기로 구분)</label>
+                            <label for="highlight-input" class="text-sm font-medium text-slate-600">강조할 단어 (띄어쓰기 포함 정확히 일치)</label>
                             <input type="text" id="highlight-input" placeholder="예: 하나님 사랑" class="mt-1 w-full border-slate-300 rounded-md shadow-sm p-2 focus:border-blue-500 focus:ring-blue-500 bg-slate-50">
                         </div>
                         <div class="flex flex-wrap items-center justify-between gap-4">
@@ -159,6 +170,9 @@
                 <div class="flex space-x-4 pt-6 border-t border-sky-100">
                     <button id="open-style-modal-btn" class="flex-1 bg-amber-100 text-amber-800 font-semibold py-2 px-4 rounded-xl hover:bg-amber-200 transition-colors">
                         ⚙️ 설정 (글꼴/간격)
+                    </button>
+                    <button id="reopen-window-btn" class="flex-1 bg-indigo-100 text-indigo-800 font-semibold py-2 px-4 rounded-xl hover:bg-indigo-200 transition-colors">
+                        🖥️ 창 다시 열기
                     </button>
                     <button id="open-guide-modal-btn" class="flex-1 bg-slate-100 text-slate-700 font-semibold py-2 px-4 rounded-xl hover:bg-slate-200 transition-colors">
                         📖 사용 안내
@@ -203,7 +217,8 @@
                     <li><strong>말씀 띄우기:</strong> '말씀 창 열기'를 눌러 새 창을 띄운 후 프로젝터(보조 모니터) 화면으로 옮겨주세요.</li>
                     <li><strong>아이콘 로고:</strong> 처음 열린 말씀 창의 정중앙에는 동일 폴더에 있는 <code class="bg-slate-100 px-1 rounded">icon.ico</code> 파일이 로고로 표시됩니다.</li>
                     <li><strong>단어 검색:</strong> 검색 결과에서 체크박스를 선택 후 '체크한 말씀 띄우기'를 통해 여러 구절을 한 번에 띄울 수 있습니다.</li>
-                    <li><strong>단어 강조:</strong> 핵심 메시지가 되는 특정 단어를 원하는 색상과 스타일(굵게, 밑줄 등)로 강조할 수 있습니다.</li>
+                    <li><strong>자유 텍스트:</strong> 설교 대지나 찬송가 제목 등 임의의 문구를 화면 정중앙에 크게 띄울 수 있습니다.</li>
+                    <li><strong>단어 강조:</strong> 핵심 메시지가 되는 특정 단어(띄어쓰기 포함 정확히 일치)를 원하는 색상과 스타일(굵게, 밑줄 등)로 강조할 수 있습니다.</li>
                 </ul>
             </div>
             <div class="bg-slate-50 p-4 text-right border-t">
@@ -228,6 +243,8 @@
         const verseInput = document.getElementById('verse-input');
         const keywordInput = document.getElementById('keyword-input');
         const keywordSearchBtn = document.getElementById('keyword-search-btn');
+        const customTextInput = document.getElementById('custom-text-input');
+        const customTextBtn = document.getElementById('custom-text-btn');
         const initialView = document.getElementById('initial-view');
         const controlPanel = document.getElementById('control-panel');
         const resultDisplay = document.getElementById('result-display');
@@ -245,6 +262,7 @@
         const closeStyleModalBtn = document.getElementById('close-style-modal-btn');
         const openGuideModalBtn = document.getElementById('open-guide-modal-btn');
         const closeGuideModalBtn = document.getElementById('close-guide-modal-btn');
+        const reopenWindowBtn = document.getElementById('reopen-window-btn');
         
         const highlightInput = document.getElementById('highlight-input');
         const highlightColor = document.getElementById('highlight-color');
@@ -435,6 +453,13 @@
                 controlPanel.classList.remove('hidden');
                 controlPanel.classList.add('animate-fade-in');
                 updateDisplayStyles();
+
+                // 실수로 창을 닫고 다시 열었을 때, 기존에 선포하시던 말씀을 즉시 복구합니다.
+                if (lastQueryResult) {
+                    setTimeout(() => {
+                        renderContent();
+                    }, 50);
+                }
             } else {
                 alert('팝업 창이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.');
             }
@@ -539,8 +564,9 @@
         function formatVerseHtml(verses, highlightInfo, isMulti = false) {
             return verses.map(v => {
                 let verseText = v.text;
-                if(highlightInfo && highlightInfo.words.length > 0) {
-                    const regex = new RegExp(highlightInfo.words.join('|'), 'g');
+                if(highlightInfo && highlightInfo.word) {
+                    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapeRegExp(highlightInfo.word), 'g');
                     verseText = verseText.replace(regex, match => `<span style="${highlightInfo.style}">${match}</span>`);
                 }
 
@@ -564,10 +590,15 @@
         }
 
         // 12. 화면 업데이트
-        function updateDisplays(verseHtml, address) {
+        function updateDisplays(verseHtml, address, isCustom = false) {
             const mainAddressHtml = address ? `<h3 class="text-lg mt-5 font-bold text-blue-700 text-right">${address}</h3>` : '';
             const mainVerseClass = "text-slate-800";
-            resultDisplay.innerHTML = `<div class="${mainVerseClass}">${verseHtml}</div>${mainAddressHtml}`;
+            
+            if (isCustom) {
+                resultDisplay.innerHTML = `<div class="${mainVerseClass} text-center py-6 font-bold text-lg">${verseHtml}</div>`;
+            } else {
+                resultDisplay.innerHTML = `<div class="${mainVerseClass}">${verseHtml}</div>${mainAddressHtml}`;
+            }
 
             if (!displayWindow || displayWindow.closed) return;
 
@@ -578,12 +609,19 @@
             if (verseContainer) {
                 verseContainer.style.opacity = 0;
                 setTimeout(() => {
-                    // 세로 중앙 정렬을 해제하고 상단 정렬로 바꿈 (본문 출력 시)
-                    verseTextDiv.innerHTML = verseHtml;
-                    verseTextDiv.parentElement.parentElement.classList.remove('justify-center');
-                    verseTextDiv.parentElement.parentElement.classList.add('justify-start');
-
-                    verseAddressDiv.innerHTML = address ? `<h2 class="text-3xl md:text-4xl mt-12 text-amber-300 text-right font-bold opacity-90">${address}</h2>` : '';
+                    if (isCustom) {
+                        // 세로 중앙 정렬 및 텍스트 렌더링
+                        verseTextDiv.innerHTML = `<div style="text-align: center; word-break: keep-all;">${verseHtml}</div>`;
+                        verseTextDiv.parentElement.parentElement.classList.remove('justify-start');
+                        verseTextDiv.parentElement.parentElement.classList.add('justify-center');
+                        verseAddressDiv.innerHTML = '';
+                    } else {
+                        // 세로 중앙 정렬을 해제하고 상단 정렬로 바꿈 (본문 출력 시)
+                        verseTextDiv.innerHTML = verseHtml;
+                        verseTextDiv.parentElement.parentElement.classList.remove('justify-center');
+                        verseTextDiv.parentElement.parentElement.classList.add('justify-start');
+                        verseAddressDiv.innerHTML = address ? `<h2 class="text-3xl md:text-4xl mt-12 text-amber-300 text-right font-bold opacity-90">${address}</h2>` : '';
+                    }
                     updateDisplayStyles();
                     verseContainer.style.opacity = 1;
                 }, 300);
@@ -640,10 +678,11 @@
         function renderContent() {
             if (!lastQueryResult) return;
 
-            const highlightWords = highlightInput.value.trim().split(' ').filter(k => k);
+            // 단어 강조는 띄어쓰기 포함하여 입력한 전체 문자열을 처리
+            const highlightWord = highlightInput.value.trim();
             let highlightInfo = null;
 
-            if (highlightWords.length > 0) {
+            if (highlightWord.length > 0) {
                 const hexToRgb = hex => {
                     const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
                     return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : null;
@@ -656,11 +695,21 @@
                 if (highlightBold.checked) style += 'font-weight: 800; text-shadow: 0px 0px 8px rgba(255,255,255,0.3);'; 
                 if (highlightItalic.checked) style += 'font-style: italic;';
                 if (highlightUnderline.checked) style += 'text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 3px;';
-                highlightInfo = { words: highlightWords, style: style };
+                highlightInfo = { word: highlightWord, style: style };
             }
 
-            const verseHtml = formatVerseHtml(lastQueryResult.verses, highlightInfo, isMultiSelectMode);
-            updateDisplays(verseHtml, lastQueryResult.address);
+            if (lastQueryResult.isCustom) {
+                let customText = lastQueryResult.text.replace(/\n/g, '<br>');
+                if(highlightInfo && highlightInfo.word) {
+                    const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp(escapeRegExp(highlightInfo.word), 'g');
+                    customText = customText.replace(regex, match => `<span style="${highlightInfo.style}">${match}</span>`);
+                }
+                updateDisplays(customText, "", true);
+            } else {
+                const verseHtml = formatVerseHtml(lastQueryResult.verses, highlightInfo, isMultiSelectMode);
+                updateDisplays(verseHtml, lastQueryResult.address, false);
+            }
         }
 
         // 16. 강조 제거 함수
@@ -708,10 +757,31 @@
 
         // --- 이벤트 리스너 세팅 ---
         openWindowBtn.addEventListener('click', openDisplayWindow);
+        reopenWindowBtn.addEventListener('click', openDisplayWindow);
         displayBtn.addEventListener('click', displayVerse);
         verseInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') displayBtn.click(); });
         keywordSearchBtn.addEventListener('click', performKeywordSearch);
         keywordInput.addEventListener('keyup', (e) => { if (e.key === 'Enter') performKeywordSearch(); });
+        
+        customTextBtn.addEventListener('click', () => {
+            clearSelection();
+            const text = customTextInput.value.trim();
+            if (!text) return;
+            lastQueryResult = {
+                isCustom: true,
+                text: text
+            };
+            isMultiSelectMode = false;
+            renderContent();
+        });
+
+        customTextInput.addEventListener('keydown', (e) => { 
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                customTextBtn.click(); 
+            }
+        });
+
         fontSizeSlider.addEventListener('input', updateDisplayStyles);
         lineHeightSlider.addEventListener('input', updateDisplayStyles);
         
